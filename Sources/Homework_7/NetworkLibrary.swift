@@ -7,7 +7,7 @@
 
 import Foundation
 
-public final class NetworkLibrary {
+public final class NetworkLibrary: NetworkRequestable {
     
     private(set) public var headers: [String:String]
     private let session: URLSessionProxy
@@ -19,7 +19,7 @@ public final class NetworkLibrary {
     
     public func request(url: String, httpMethod: HTTPMethod = .get,
                         httpHeaders: [HTTPHeader] = [], parameters: Parameters? = nil,
-                        parametersType: ParametersType = .defaultParam) -> DataTask {
+                        parametersType: ParametersType = .defaultParam) -> ResurseCombined {
         
         var unionHeaders = self.headers
         

@@ -20,15 +20,20 @@ final class NetworkRequestableTest: XCTestCase {
         let dataTask = networkLibrary.request(url: url, httpMethod: .get, httpHeaders: [header], parameters: param)
         param = ["mockTypeString": "mockValue", "mockTypeBool": true, "mockTypeInt": 1]
         
-        XCTAssertEqual(dataTask.httpHeaders, [header].getDict())
-        XCTAssertEqual(dataTask.httpMethod, .get)
-        if let parameters = dataTask.parameters {
-            XCTAssert(parameters == param)
+        if let dataTask = dataTask as? ResurseSetupable {
+            XCTAssertEqual(dataTask.httpHeaders, [header].getDict())
+            XCTAssertEqual(dataTask.httpMethod, .get)
+            if let parameters = dataTask.parameters {
+                XCTAssert(parameters == param)
+            } else {
+                XCTFail("Failed to cast parameters")
+            }
+            XCTAssertEqual(dataTask.parametersType, .defaultParam)
+            XCTAssertEqual(dataTask.url, url)
+            //XCTAssertEqual(dataTask.successRange, 200..<300)
         } else {
-            XCTFail("Failed to cast parameters")
+            XCTFail("Data Task Should conform ResurseSetupable")
         }
-        XCTAssertEqual(dataTask.parametersType, .defaultParam)
-        XCTAssertEqual(dataTask.url, url)
         
     }
     
@@ -46,7 +51,11 @@ final class NetworkRequestableTest: XCTestCase {
         
         let dataTask = nt.request(url: url, httpHeaders: [header])
         
-        XCTAssertEqual(dataTask.httpHeaders, expextedHeaders)
+        if let dataTask = dataTask as? ResurseSetupable {
+            XCTAssertEqual(dataTask.httpHeaders, expextedHeaders)
+        } else {
+            XCTFail("Data Task Should conform ResurseSetupable")
+        }
         
     }
     

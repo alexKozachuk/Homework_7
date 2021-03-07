@@ -7,6 +7,7 @@
 
 import Foundation
 
+
 internal final class ResponseValidator<S: Sequence> where S.Iterator.Element == Int {
     
     private var acceptableStatusCodes: S

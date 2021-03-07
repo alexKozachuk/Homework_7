@@ -26,7 +26,7 @@ public enum ParametersType {
     case httpBody
 }
 
-public final class DataTask {
+public final class DataTask: ResurseCombined {
     
     private(set) var url: String
     private(set) var httpMethod: HTTPMethod
@@ -54,7 +54,7 @@ public final class DataTask {
 
 // MARK: Setup Methods
 
-private extension DataTask {
+extension DataTask: ResurseSetupable {
     
     func setupRequest() -> Result<URLRequest, NetworkError> {
         
@@ -101,10 +101,9 @@ private extension DataTask {
 
 // MARK: Response Methods
 
-public extension DataTask {
+extension DataTask: ResurseResponsable {
     
-    func response(queue: DispatchQueue = .main,
-                         completion: @escaping (Result<Data, NetworkError>) -> Void) {
+    public func response(completion: @escaping (Result<Data, NetworkError>) -> Void) {
         
         let result = setupRequest()
             
@@ -112,83 +111,80 @@ public extension DataTask {
         case .success(let request):
             self.session.dataTask(with: request) { data, response, error in
                 if let error = error {
-                    queue.async { completion(.failure(.callMethodError(error))) }
+                    completion(.failure(.callMethodError(error)))
                     return
                 }
                 
                 if let validator = self.validator {
                     guard let response = response as? HTTPURLResponse,
                           validator(response) else {
-                        queue.async { completion(.failure(.httpRequestError)) }
+                        completion(.failure(.httpRequestError))
                         return
                     }
                 }
                 
                 guard let data = data else {
-                    queue.async { completion(.failure(.resiveDataError)) }
+                    completion(.failure(.resiveDataError))
                     return
                 }
                 
-                queue.async { completion(.success(data)) }
+                completion(.success(data))
             }.resume()
         case .failure(let error):
-            queue.async { completion(.failure(error)) }
+            completion(.failure(error))
         }
             
             
     }
     
-    func responseDecodable<T: Decodable>(of type: T.Type,
-                                                queue: DispatchQueue = .main,
-                                                completion: @escaping (Result<T, NetworkError>) -> Void) {
-        self.response(queue: queue) { result in
+    public func responseDecodable<T: Decodable>(of type: T.Type,
+                                         completion: @escaping (Result<T, NetworkError>) -> Void) {
+        self.response { result in
             
             switch result {
             case .success(let data):
                 guard let item = try? JSONDecoder().decode(T.self, from: data) else {
-                    queue.async { completion(.failure(.jsonDecodeError)) }
+                    completion(.failure(.jsonDecodeError))
                     return
                 }
-                queue.async { completion(.success(item)) }
+                completion(.success(item))
             case .failure(let error):
-                queue.async { completion(.failure(error)) }
+                completion(.failure(error))
             }
             
         }
         
     }
 
-    func responseJSON(queue: DispatchQueue = .main,
-                             completion: @escaping (Result<Any, NetworkError>) -> Void) {
+    public func responseJSON(completion: @escaping (Result<Any, NetworkError>) -> Void) {
         
-        self.response(queue: queue) { result in
+        self.response { result in
             
             switch result {
             case .success(let data):
                 guard let json = try? JSONSerialization.jsonObject(with: data, options: []) else {
-                    queue.async { completion(.failure(.jsonDecodeError)) }
+                    completion(.failure(.jsonDecodeError))
                     return
                 }
-                queue.async { completion(.success(json)) }
+                completion(.success(json))
             case .failure(let error):
-                queue.async { completion(.failure(error)) }
+                completion(.failure(error))
             }
             
         }
         
     }
 
-    func responseString(queue: DispatchQueue = .main,
-                               completion: @escaping (Result<String, NetworkError>) -> Void) {
+    public func responseString(completion: @escaping (Result<String, NetworkError>) -> Void) {
         
-        self.response(queue: queue) { result in
+        self.response { result in
             
             switch result {
             case .success(let data):
                 let str = String(decoding: data, as: UTF8.self)
-                queue.async { completion(.success(str)) }
+                completion(.success(str))
             case .failure(let error):
-                queue.async { completion(.failure(error)) }
+                completion(.failure(error))
             }
             
         }
@@ -199,9 +195,9 @@ public extension DataTask {
 
 // MARK: Validate Methods
 
-public extension DataTask {
+extension DataTask: ResurseValidated {
     
-    func validate<S: Sequence>(statusCode: S) -> Self where S.Iterator.Element == Int {
+    public func validate<S: Sequence>(statusCode: S) -> Self where S.Iterator.Element == Int {
         
         validator = { response in
             let validator = ResponseValidator(statusCode)
@@ -211,7 +207,7 @@ public extension DataTask {
         return self
     }
     
-    func validate() -> Self {
+    public func validate() -> Self {
         self.validator = { response in
             let validator = ResponseValidator(200 ..< 300)
             return validator.validate(response: response)
@@ -219,7 +215,7 @@ public extension DataTask {
         return self
     }
     
-    func validate(contentType: String) -> Self {
+    public func validate(contentType: String) -> Self {
         httpHeaders["Content-type"] = contentType
         return self
     }
