@@ -104,7 +104,7 @@ private extension DataTask {
 public extension DataTask {
     
     func response(queue: DispatchQueue = .main,
-                         completion: @escaping (Result<Data, NetworkError>) -> Void) {
+                         completion: @escaping (DataResponse<Data>) -> Void) {
         
         let result = setupRequest()
             
@@ -112,25 +112,37 @@ public extension DataTask {
         case .success(let request):
             self.session.dataTask(with: request) { data, response, error in
                 if let error = error {
-                    queue.async { completion(.failure(.callMethodError(error))) }
+                    let dataResponse = DataResponse<Data>(result: .failure(.callMethodError(error)),
+                                                          request: request)
+                    queue.async { completion(dataResponse) }
                     return
                 }
                 
                 
                 guard let response = response as? HTTPURLResponse, (self.validator?(response) ?? true) else {
-                    queue.async { completion(.failure(.httpRequestError)) }
+                    let dataResponse = DataResponse<Data>(result: .failure(.httpRequestError),
+                                                          request: request)
+                    queue.async { completion(dataResponse) }
                     return
                 }
                 
                 guard let data = data else {
-                    queue.async { completion(.failure(.resiveDataError)) }
+                    let dataResponse = DataResponse<Data>(result: .failure(.resiveDataError),
+                                                          request: request,
+                                                          response: response)
+                    queue.async { completion(dataResponse) }
                     return
                 }
                 
-                queue.async { completion(.success(data)) }
+                let dataResponse = DataResponse<Data>(result: .success(data),
+                                                      request: request,
+                                                      response: response)
+                
+                queue.async { completion(dataResponse) }
             }.resume()
         case .failure(let error):
-            queue.async { completion(.failure(error)) }
+            let dataResponse = DataResponse<Data>(result: .failure(error))
+            queue.async { completion(dataResponse) }
         }
             
             
@@ -138,18 +150,27 @@ public extension DataTask {
     
     func responseDecodable<T: Decodable>(of type: T.Type,
                                                 queue: DispatchQueue = .main,
-                                                completion: @escaping (Result<T, NetworkError>) -> Void) {
-        self.response(queue: queue) { result in
+                                                completion: @escaping (DataResponse<T>) -> Void) {
+        self.response(queue: queue) { response in
             
-            switch result {
+            switch response.result {
             case .success(let data):
                 guard let item = try? JSONDecoder().decode(T.self, from: data) else {
-                    queue.async { completion(.failure(.jsonDecodeError)) }
+                    let dataResponse = DataResponse<T>(result: .failure(.jsonDecodeError),
+                                                       request: response.request,
+                                                       response: response.response)
+                    queue.async { completion(dataResponse) }
                     return
                 }
-                queue.async { completion(.success(item)) }
+                let dataResponse = DataResponse<T>(result: .success(item),
+                                                   request: response.request,
+                                                   response: response.response)
+                queue.async { completion(dataResponse) }
             case .failure(let error):
-                queue.async { completion(.failure(error)) }
+                let dataResponse = DataResponse<T>(result: .failure(error),
+                                                   request: response.request,
+                                                   response: response.response)
+                queue.async { completion(dataResponse) }
             }
             
         }
@@ -157,19 +178,28 @@ public extension DataTask {
     }
 
     func responseJSON(queue: DispatchQueue = .main,
-                             completion: @escaping (Result<Any, NetworkError>) -> Void) {
+                             completion: @escaping (DataResponse<Any>) -> Void) {
         
-        self.response(queue: queue) { result in
+        self.response(queue: queue) { response in
             
-            switch result {
+            switch response.result {
             case .success(let data):
                 guard let json = try? JSONSerialization.jsonObject(with: data, options: []) else {
-                    queue.async { completion(.failure(.jsonDecodeError)) }
+                    let dataResponse = DataResponse<Any>(result: .failure(.jsonDecodeError),
+                                                         request: response.request,
+                                                        response: response.response)
+                    queue.async { completion(dataResponse) }
                     return
                 }
-                queue.async { completion(.success(json)) }
+                let dataResponse = DataResponse<Any>(result: .success(json),
+                                                     request: response.request,
+                                                     response: response.response)
+                queue.async { completion(dataResponse) }
             case .failure(let error):
-                queue.async { completion(.failure(error)) }
+                let dataResponse = DataResponse<Any>(result: .failure(error),
+                                                     request: response.request,
+                                                     response: response.response)
+                queue.async { completion(dataResponse) }
             }
             
         }
@@ -177,16 +207,22 @@ public extension DataTask {
     }
 
     func responseString(queue: DispatchQueue = .main,
-                               completion: @escaping (Result<String, NetworkError>) -> Void) {
+                               completion: @escaping (DataResponse<String>) -> Void) {
         
-        self.response(queue: queue) { result in
+        self.response(queue: queue) { response in
             
-            switch result {
+            switch response.result {
             case .success(let data):
                 let str = String(decoding: data, as: UTF8.self)
-                queue.async { completion(.success(str)) }
+                let dataResponse = DataResponse<String>(result: .success(str),
+                                                        request: response.request,
+                                                        response: response.response)
+                queue.async { completion(dataResponse) }
             case .failure(let error):
-                queue.async { completion(.failure(error)) }
+                let dataResponse = DataResponse<String>(result: .failure(error),
+                                                        request: response.request,
+                                                        response: response.response)
+                queue.async { completion(dataResponse) }
             }
             
         }

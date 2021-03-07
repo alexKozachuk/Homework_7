@@ -70,8 +70,8 @@ final class NetworkRequestableTest: XCTestCase {
         
         session.nextData = expectedData
         
-        dataTask.response { result in
-            switch result {
+        dataTask.response { response in
+            switch response.result {
             case .success(let data):
                 XCTAssertEqual(data, expectedData)
             default:
@@ -101,8 +101,8 @@ final class NetworkRequestableTest: XCTestCase {
         
         session.nextData = expectedData
         
-        dataTask.response { result in
-            guard let data = try? result.get() else {
+        dataTask.response { response in
+            guard let data = try? response.result.get() else {
                 XCTFail("Should receive data")
                 return
             }
@@ -122,8 +122,8 @@ final class NetworkRequestableTest: XCTestCase {
         
         let dataTask = networkLibrary.request(url: url)
         
-        dataTask.response { result in
-            switch result {
+        dataTask.response { response in
+            switch response.result {
             case .failure(let error):
                 XCTAssertEqual(error, .buildUrlError)
             default:
@@ -140,8 +140,8 @@ final class NetworkRequestableTest: XCTestCase {
         
         let dataTask = networkLibrary.request(url: url, httpMethod: .post, parametersType: .httpBody)
         
-        dataTask.response { result in
-            switch result {
+        dataTask.response { response in
+            switch response.result {
             case .failure(let error):
                 XCTAssertEqual(error, .sendBodyWithoutParam)
             default:
@@ -162,8 +162,8 @@ final class NetworkRequestableTest: XCTestCase {
         
         session.nextError = expectedError
         
-        dataTask.response { result in
-            switch result {
+        dataTask.response { response in
+            switch response.result {
             case .failure(let error):
                 XCTAssertEqual(error, .callMethodError(expectedError))
             default:
@@ -181,8 +181,8 @@ final class NetworkRequestableTest: XCTestCase {
         
         session.nextData = nil
         
-        dataTask.response { result in
-            switch result {
+        dataTask.response { response in
+            switch response.result {
             case .failure(let error):
                 XCTAssertEqual(error, .resiveDataError)
             default:
@@ -202,8 +202,8 @@ final class NetworkRequestableTest: XCTestCase {
         session.nextStatusCode = 400
         session.nextData = expectedData
         
-        dataTask.validate().response { result in
-            switch result {
+        dataTask.validate().response { response in
+            switch response.result {
             case .failure(let error):
                 XCTAssertEqual(error, .httpRequestError)
             default:
@@ -232,8 +232,8 @@ final class NetworkRequestableTest: XCTestCase {
         
         let dataTask = networkLibrary.request(url: url)
         
-        dataTask.responseDecodable(of: Mock.self) { result in
-            switch result {
+        dataTask.responseDecodable(of: Mock.self) { response in
+            switch response.result {
             case .success(let mock):
                 XCTAssertEqual(mock, expectedMock)
             default:
@@ -252,8 +252,8 @@ final class NetworkRequestableTest: XCTestCase {
         let dataTask = networkLibrary.request(url: url)
         session.nextData = nil
         
-        dataTask.responseDecodable(of: Mock.self) { result in
-            switch result {
+        dataTask.responseDecodable(of: Mock.self) { response in
+            switch response.result {
             case .success(_):
                 XCTFail("Should receive failure")
             default:
@@ -284,8 +284,8 @@ final class NetworkRequestableTest: XCTestCase {
         
         session.nextData = expectedBreakData
         
-        dataTask.responseDecodable(of: Mock.self) { result in
-            switch result {
+        dataTask.responseDecodable(of: Mock.self) { response in
+            switch response.result {
             case .failure(let error):
                 XCTAssertEqual(error, .jsonDecodeError)
             default:
@@ -315,8 +315,8 @@ final class NetworkRequestableTest: XCTestCase {
         
         let dataTask = networkLibrary.request(url: url)
         
-        dataTask.responseString { result in
-            switch result {
+        dataTask.responseString { response in
+            switch response.result {
             case .success(let string):
                 XCTAssertEqual(string, expectedString)
             default:
@@ -334,8 +334,8 @@ final class NetworkRequestableTest: XCTestCase {
         let dataTask = networkLibrary.request(url: url)
         session.nextData = nil
         
-        dataTask.responseString { result in
-            switch result {
+        dataTask.responseString { response in
+            switch response.result {
             case .success(_):
                 XCTFail("Should receive failure")
             default:
@@ -374,8 +374,8 @@ final class NetworkRequestableTest: XCTestCase {
         
         let dataTask = networkLibrary.request(url: url)
         
-        dataTask.responseJSON { result in
-            switch result {
+        dataTask.responseJSON { response in
+            switch response.result {
             case .success(let json):
                 XCTAssertEqual("\(json)", "\(expectedJSON)")
             default:
@@ -393,8 +393,8 @@ final class NetworkRequestableTest: XCTestCase {
         let dataTask = networkLibrary.request(url: url)
         session.nextData = nil
         
-        dataTask.responseJSON { result in
-            switch result {
+        dataTask.responseJSON { response in
+            switch response.result {
             case .success(_):
                 XCTFail("Should receive failure")
             default:
@@ -425,8 +425,8 @@ final class NetworkRequestableTest: XCTestCase {
         
         session.nextData = expectedBreakData
         
-        dataTask.responseJSON { result in
-            switch result {
+        dataTask.responseJSON { response in
+            switch response.result {
             case .failure(let error):
                 XCTAssertEqual(error, .jsonDecodeError)
             default:
@@ -448,9 +448,9 @@ final class NetworkRequestableTest: XCTestCase {
         
         let dataTask = networkLibrary.request(url: url).validate(statusCode: expextedStatusCode)
         
-        dataTask.response { result in
+        dataTask.response { response in
             
-            switch result {
+            switch response.result {
             case .failure(let error):
                 XCTAssertEqual(error, .httpRequestError)
             default:
