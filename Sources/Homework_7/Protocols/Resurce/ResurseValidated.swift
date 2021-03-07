@@ -7,7 +7,6 @@
 
 import Foundation
 
-
 public protocol ResurseValidated {
     
     func validate<S: Sequence>(statusCode: S) -> Self where S.Iterator.Element == Int
