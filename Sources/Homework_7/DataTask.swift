@@ -19,6 +19,7 @@ public enum NetworkError: Error {
     case sendBodyWithoutParam
     case buildUrlError
     case unexpectedError
+    case badValidation(HTTPURLResponse)
 }
 
 public enum ParametersType {
@@ -26,7 +27,7 @@ public enum ParametersType {
     case httpBody
 }
 
-public final class DataTask: ResurseCombined {
+public final class DataTask {
     
     private(set) var url: String
     private(set) var httpMethod: HTTPMethod
@@ -54,7 +55,7 @@ public final class DataTask: ResurseCombined {
 
 // MARK: Setup Methods
 
-extension DataTask: ResurseSetupable {
+private extension DataTask {
     
     func setupRequest() -> Result<URLRequest, NetworkError> {
         
@@ -101,9 +102,10 @@ extension DataTask: ResurseSetupable {
 
 // MARK: Response Methods
 
-extension DataTask: ResurseResponsable {
+public extension DataTask {
     
-    public func response(completion: @escaping (Result<Data, NetworkError>) -> Void) {
+    func response(queue: DispatchQueue = .main,
+                         completion: @escaping (Result<Data, NetworkError>) -> Void) {
         
         let result = setupRequest()
             
@@ -111,80 +113,85 @@ extension DataTask: ResurseResponsable {
         case .success(let request):
             self.session.dataTask(with: request) { data, response, error in
                 if let error = error {
-                    completion(.failure(.callMethodError(error)))
+                    queue.async { completion(.failure(.callMethodError(error))) }
                     return
                 }
                 
-                if let validator = self.validator {
-                    guard let response = response as? HTTPURLResponse,
-                          validator(response) else {
-                        completion(.failure(.httpRequestError))
-                        return
-                    }
+                
+                guard let response = response as? HTTPURLResponse else {
+                    queue.async { completion(.failure(.httpRequestError)) }
+                    return
+                }
+            
+                if let validator = self.validator, validator(response) {
+                    queue.async { completion(.failure(.badValidation(response)))}
                 }
                 
                 guard let data = data else {
-                    completion(.failure(.resiveDataError))
+                    queue.async { completion(.failure(.resiveDataError)) }
                     return
                 }
                 
-                completion(.success(data))
+                queue.async { completion(.success(data)) }
             }.resume()
         case .failure(let error):
-            completion(.failure(error))
+            queue.async { completion(.failure(error)) }
         }
             
             
     }
     
-    public func responseDecodable<T: Decodable>(of type: T.Type,
-                                         completion: @escaping (Result<T, NetworkError>) -> Void) {
-        self.response { result in
+    func responseDecodable<T: Decodable>(of type: T.Type,
+                                                queue: DispatchQueue = .main,
+                                                completion: @escaping (Result<T, NetworkError>) -> Void) {
+        self.response(queue: queue) { result in
             
             switch result {
             case .success(let data):
                 guard let item = try? JSONDecoder().decode(T.self, from: data) else {
-                    completion(.failure(.jsonDecodeError))
+                    queue.async { completion(.failure(.jsonDecodeError)) }
                     return
                 }
-                completion(.success(item))
+                queue.async { completion(.success(item)) }
             case .failure(let error):
-                completion(.failure(error))
+                queue.async { completion(.failure(error)) }
             }
             
         }
         
     }
 
-    public func responseJSON(completion: @escaping (Result<Any, NetworkError>) -> Void) {
+    func responseJSON(queue: DispatchQueue = .main,
+                             completion: @escaping (Result<Any, NetworkError>) -> Void) {
         
-        self.response { result in
+        self.response(queue: queue) { result in
             
             switch result {
             case .success(let data):
                 guard let json = try? JSONSerialization.jsonObject(with: data, options: []) else {
-                    completion(.failure(.jsonDecodeError))
+                    queue.async { completion(.failure(.jsonDecodeError)) }
                     return
                 }
-                completion(.success(json))
+                queue.async { completion(.success(json)) }
             case .failure(let error):
-                completion(.failure(error))
+                queue.async { completion(.failure(error)) }
             }
             
         }
         
     }
 
-    public func responseString(completion: @escaping (Result<String, NetworkError>) -> Void) {
+    func responseString(queue: DispatchQueue = .main,
+                               completion: @escaping (Result<String, NetworkError>) -> Void) {
         
-        self.response { result in
+        self.response(queue: queue) { result in
             
             switch result {
             case .success(let data):
                 let str = String(decoding: data, as: UTF8.self)
-                completion(.success(str))
+                queue.async { completion(.success(str)) }
             case .failure(let error):
-                completion(.failure(error))
+                queue.async { completion(.failure(error)) }
             }
             
         }
@@ -195,9 +202,9 @@ extension DataTask: ResurseResponsable {
 
 // MARK: Validate Methods
 
-extension DataTask: ResurseValidated {
+extension DataTask {
     
-    public func validate<S: Sequence>(statusCode: S) -> Self where S.Iterator.Element == Int {
+    func validate<S: Sequence>(statusCode: S) -> Self where S.Iterator.Element == Int {
         
         validator = { response in
             let validator = ResponseValidator(statusCode)
@@ -207,7 +214,7 @@ extension DataTask: ResurseValidated {
         return self
     }
     
-    public func validate() -> Self {
+    func validate() -> Self {
         self.validator = { response in
             let validator = ResponseValidator(200 ..< 300)
             return validator.validate(response: response)
@@ -215,7 +222,7 @@ extension DataTask: ResurseValidated {
         return self
     }
     
-    public func validate(contentType: String) -> Self {
+    func validate(contentType: String) -> Self {
         httpHeaders["Content-type"] = contentType
         return self
     }

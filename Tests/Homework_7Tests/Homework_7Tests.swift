@@ -11,6 +11,7 @@ final class NetworkRequestableTest: XCTestCase {
         networkLibrary = NetworkLibrary(session: session)
     }
     
+    
     // MARK: - Setup Resurse Tests
     
     func testSetupResurse() {
@@ -20,20 +21,15 @@ final class NetworkRequestableTest: XCTestCase {
         let dataTask = networkLibrary.request(url: url, httpMethod: .get, httpHeaders: [header], parameters: param)
         param = ["mockTypeString": "mockValue", "mockTypeBool": true, "mockTypeInt": 1]
         
-        if let dataTask = dataTask as? ResurseSetupable {
-            XCTAssertEqual(dataTask.httpHeaders, [header].getDict())
-            XCTAssertEqual(dataTask.httpMethod, .get)
-            if let parameters = dataTask.parameters {
-                XCTAssert(parameters == param)
-            } else {
-                XCTFail("Failed to cast parameters")
-            }
-            XCTAssertEqual(dataTask.parametersType, .defaultParam)
-            XCTAssertEqual(dataTask.url, url)
-            //XCTAssertEqual(dataTask.successRange, 200..<300)
+        XCTAssertEqual(dataTask.httpHeaders, [header].getDict())
+        XCTAssertEqual(dataTask.httpMethod, .get)
+        if let parameters = dataTask.parameters {
+            XCTAssert(parameters == param)
         } else {
-            XCTFail("Data Task Should conform ResurseSetupable")
+            XCTFail("Failed to cast parameters")
         }
+        XCTAssertEqual(dataTask.parametersType, .defaultParam)
+        XCTAssertEqual(dataTask.url, url)
         
     }
     
@@ -51,17 +47,14 @@ final class NetworkRequestableTest: XCTestCase {
         
         let dataTask = nt.request(url: url, httpHeaders: [header])
         
-        if let dataTask = dataTask as? ResurseSetupable {
-            XCTAssertEqual(dataTask.httpHeaders, expextedHeaders)
-        } else {
-            XCTFail("Data Task Should conform ResurseSetupable")
-        }
+        XCTAssertEqual(dataTask.httpHeaders, expextedHeaders)
         
     }
     
     // MARK: - Success Tests
     
     func testPostResponseSuccess() {
+        let exp = expectation(description: "should response")
         
         let expectedData =
             """
@@ -84,11 +77,14 @@ final class NetworkRequestableTest: XCTestCase {
             default:
                 XCTFail("Should receive success")
             }
+            exp.fulfill()
         }
         
+        wait(for: [exp], timeout: 5)
     }
     
     func testGetResponseSuccess() {
+        let exp = expectation(description: "should response")
         let expectedData =
             """
             {
@@ -112,13 +108,16 @@ final class NetworkRequestableTest: XCTestCase {
             }
             
             XCTAssertEqual(data, expectedData)
+            exp.fulfill()
         }
         
+        wait(for: [exp], timeout: 5)
     }
     
     // MARK: - Test Setup in DataTask
     
     func testGetResponseFailureBuildUrl() {
+        let exp = expectation(description: "should response")
         let url = "break url"
         
         let dataTask = networkLibrary.request(url: url)
@@ -130,10 +129,13 @@ final class NetworkRequestableTest: XCTestCase {
             default:
                 XCTFail("Should receive error")
             }
+            exp.fulfill()
         }
+        wait(for: [exp], timeout: 5)
     }
     
     func testPostResponseFailureSendBodyWithoutParam() {
+        let exp = expectation(description: "should response")
         let url = "https://mockurl"
         
         let dataTask = networkLibrary.request(url: url, httpMethod: .post, parametersType: .httpBody)
@@ -145,13 +147,15 @@ final class NetworkRequestableTest: XCTestCase {
             default:
                 XCTFail("Should receive error")
             }
+            exp.fulfill()
         }
-        
+        wait(for: [exp], timeout: 5)
     }
     
     // MARK: - Response Test
     
     func testGetFailureCallMethodError() {
+        let exp = expectation(description: "should response")
         let url = "https://mockurl"
         let dataTask = networkLibrary.request(url: url)
         let expectedError = NetworkError.unexpectedError
@@ -165,10 +169,13 @@ final class NetworkRequestableTest: XCTestCase {
             default:
                 XCTFail("Should receive error")
             }
+            exp.fulfill()
         }
+        wait(for: [exp], timeout: 5)
     }
     
     func testGetFailureResiveDataError() {
+        let exp = expectation(description: "should response")
         let url = "https://mockurl"
         let dataTask = networkLibrary.request(url: url)
         
@@ -181,10 +188,13 @@ final class NetworkRequestableTest: XCTestCase {
             default:
                 XCTFail("Should receive error")
             }
+            exp.fulfill()
         }
+        wait(for: [exp], timeout: 5)
     }
     
     func testGetFailurehttpRequestError() {
+        let exp = expectation(description: "should response")
         let url = "https://mockurl"
         let dataTask = networkLibrary.request(url: url)
         let expectedData = "{}".data(using: .utf8)
@@ -199,13 +209,15 @@ final class NetworkRequestableTest: XCTestCase {
             default:
                 XCTFail("Should receive error")
             }
+            exp.fulfill()
         }
+        wait(for: [exp], timeout: 5)
     }
     
     // MARK: - Response Decodable Tests
     
     func testResponseDecodableSuccess() {
-        
+        let exp = expectation(description: "should response")
         let expectedMock = Mock(id: 1, title: "someTitle")
         
         guard let expectedData = try? JSONEncoder().encode(expectedMock) else {
@@ -226,11 +238,14 @@ final class NetworkRequestableTest: XCTestCase {
             default:
                 XCTFail("Should receive success")
             }
+            exp.fulfill()
         }
         
+        wait(for: [exp], timeout: 5)
     }
     
     func testResponseDecodableError() {
+        let exp = expectation(description: "should response")
         let url = "https://mockurl"
         
         let dataTask = networkLibrary.request(url: url)
@@ -243,10 +258,13 @@ final class NetworkRequestableTest: XCTestCase {
             default:
                 break
             }
+            exp.fulfill()
         }
+        wait(for: [exp], timeout: 5)
     }
     
     func testResponseJSONDecodableError() {
+        let exp = expectation(description: "should response")
         let expectedBreakString =
             """
             {
@@ -272,13 +290,15 @@ final class NetworkRequestableTest: XCTestCase {
             default:
                 XCTFail("Should receive failure")
             }
+            exp.fulfill()
         }
+        wait(for: [exp], timeout: 5)
     }
     
     // MARK: Response String Tests
     
     func testResponseStringSuccess() {
-        
+        let exp = expectation(description: "should response")
         let expectedString =
             """
             {
@@ -301,12 +321,13 @@ final class NetworkRequestableTest: XCTestCase {
             default:
                 XCTFail("Should receive success")
             }
+            exp.fulfill()
         }
-        
+        wait(for: [exp], timeout: 5)
     }
     
     func testResponseStringError() {
-        
+        let exp = expectation(description: "should response")
         let url = "https://mockurl"
         
         let dataTask = networkLibrary.request(url: url)
@@ -319,13 +340,15 @@ final class NetworkRequestableTest: XCTestCase {
             default:
                 break
             }
+            exp.fulfill()
         }
+        wait(for: [exp], timeout: 5)
     }
     
     // MARK: Response JSON Tests
     
     func testResponseJSONSuccess() {
-     
+        let exp = expectation(description: "should response")
         let expectedString =
             """
             {
@@ -357,11 +380,13 @@ final class NetworkRequestableTest: XCTestCase {
             default:
                 XCTFail("Should receive success")
             }
+            exp.fulfill()
         }
-        
+        wait(for: [exp], timeout: 5)
     }
     
     func testResponseJSONError() {
+        let exp = expectation(description: "should response")
         let url = "https://mockurl"
         
         let dataTask = networkLibrary.request(url: url)
@@ -374,10 +399,13 @@ final class NetworkRequestableTest: XCTestCase {
             default:
                 break
             }
+            exp.fulfill()
         }
+        wait(for: [exp], timeout: 5)
     }
     
     func testResponseJSONDecodeError() {
+        let exp = expectation(description: "should response")
         let expectedBreakString =
             """
             {
@@ -403,12 +431,15 @@ final class NetworkRequestableTest: XCTestCase {
             default:
                 XCTFail("Should receive failure")
             }
+            exp.fulfill()
         }
+        wait(for: [exp], timeout: 5)
     }
     
     // MARK: Validate Tests
     
     func testResponseValidateStatusCode() {
+        let exp = expectation(description: "should response")
         let url = "https://mockurl"
         let expextedStatusCode = 1..<100
         
@@ -424,8 +455,9 @@ final class NetworkRequestableTest: XCTestCase {
             default:
                 XCTFail("Should receive failure")
             }
-            
+            exp.fulfill()
         }
+        wait(for: [exp], timeout: 5)
     }
         
     func testResponseValidateContentType() {
@@ -439,20 +471,24 @@ final class NetworkRequestableTest: XCTestCase {
 
     static var allTests = [
         ("testSetupResurse", testSetupResurse),
+        ("testRewriteHeaders", testRewriteHeaders),
+        ("testPostResponseSuccess", testPostResponseSuccess),
         ("testGetResponseSuccess", testGetResponseSuccess),
         ("testGetResponseFailureBuildUrl", testGetResponseFailureBuildUrl),
         ("testPostResponseFailureSendBodyWithoutParam", testPostResponseFailureSendBodyWithoutParam),
-        ("testPostResponseSuccess", testPostResponseSuccess),
         ("testGetFailureCallMethodError", testGetFailureCallMethodError),
         ("testGetFailureResiveDataError", testGetFailureResiveDataError),
         ("testGetFailurehttpRequestError", testGetFailurehttpRequestError),
         ("testResponseDecodableSuccess", testResponseDecodableSuccess),
-        ("testResponseStringSuccess", testResponseStringSuccess),
-        ("testResponseJSONError", testResponseJSONSuccess),
         ("testResponseDecodableError", testResponseDecodableError),
+        ("testResponseJSONDecodableError", testResponseJSONDecodableError),
+        ("testResponseStringSuccess", testResponseStringSuccess),
         ("testResponseStringError", testResponseStringError),
+        ("testResponseJSONSuccess", testResponseJSONSuccess),
         ("testResponseJSONError", testResponseJSONError),
-        ("testResponseJSONDecodeError", testResponseJSONDecodeError)
+        ("testResponseJSONDecodeError", testResponseJSONDecodeError),
+        ("testResponseValidateStatusCode", testResponseValidateStatusCode),
+        ("testResponseValidateContentType", testResponseValidateContentType)
     ]
 }
 
