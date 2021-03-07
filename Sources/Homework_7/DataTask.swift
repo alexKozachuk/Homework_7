@@ -19,7 +19,6 @@ public enum NetworkError: Error {
     case sendBodyWithoutParam
     case buildUrlError
     case unexpectedError
-    case badValidation(HTTPURLResponse)
 }
 
 public enum ParametersType {
@@ -118,13 +117,9 @@ public extension DataTask {
                 }
                 
                 
-                guard let response = response as? HTTPURLResponse else {
+                guard let response = response as? HTTPURLResponse, (self.validator?(response) ?? true) else {
                     queue.async { completion(.failure(.httpRequestError)) }
                     return
-                }
-            
-                if let validator = self.validator, validator(response) {
-                    queue.async { completion(.failure(.badValidation(response)))}
                 }
                 
                 guard let data = data else {
