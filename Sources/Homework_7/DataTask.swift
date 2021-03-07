@@ -233,7 +233,7 @@ public extension DataTask {
 
 // MARK: Validate Methods
 
-extension DataTask {
+public extension DataTask {
     
     func validate<S: Sequence>(statusCode: S) -> Self where S.Iterator.Element == Int {
         
