@@ -17,8 +17,11 @@ final class NetworkRequestableTest: XCTestCase {
     func testSetupResurse() {
         let url = "https://mockurl"
         let header = HTTPHeader(name: "MockNameHeader", value: "MockValueHeader")
-        var param: [String: Any] = ["mockTypeString": "mockValue", "mockTypeInt": 1, "mockTypeBool": true]
-        let dataTask = networkLibrary.request(url: url, httpMethod: .get, httpHeaders: [header], parameters: param)
+        var param: [String: Any] = ["mockTypeString": "mockValue",
+                                    "mockTypeInt": 1,
+                                    "mockTypeBool": true]
+        let dataTask = networkLibrary.request(url: url, httpMethod: .get,
+                                              httpHeaders: [header], parameters: param)
         param = ["mockTypeString": "mockValue", "mockTypeBool": true, "mockTypeInt": 1]
         
         XCTAssertEqual(dataTask.httpHeaders, [header].getDict())
@@ -65,8 +68,11 @@ final class NetworkRequestableTest: XCTestCase {
             """.data(using: .utf8)
         
         let url = "https://mockurl"
-        let param: [String: Any] = ["mockTypeString": "mockValue", "mockTypeInt": 1, "mockTypeBool": true]
-        let dataTask = networkLibrary.request(url: url, httpMethod: .post, parameters: param, parametersType: .httpBody)
+        let param: [String: Any] = ["mockTypeString": "mockValue",
+                                    "mockTypeInt": 1,
+                                    "mockTypeBool": true]
+        let dataTask = networkLibrary.request(url: url, httpMethod: .post,
+                                              parameters: param, parametersType: .httpBody)
         
         session.nextData = expectedData
         
@@ -97,7 +103,8 @@ final class NetworkRequestableTest: XCTestCase {
         let url = "https://mockurl"
         let header = HTTPHeader(name: "MockNameHeader", value: "MockValueHeader")
         let param = ["mockType": "mockValue"]
-        let dataTask = networkLibrary.request(url: url, httpMethod: .get, httpHeaders: [header], parameters: param)
+        let dataTask = networkLibrary.request(url: url, httpMethod: .get,
+                                              httpHeaders: [header], parameters: param)
         
         session.nextData = expectedData
         
@@ -138,7 +145,8 @@ final class NetworkRequestableTest: XCTestCase {
         let exp = expectation(description: "should response")
         let url = "https://mockurl"
         
-        let dataTask = networkLibrary.request(url: url, httpMethod: .post, parametersType: .httpBody)
+        let dataTask = networkLibrary.request(url: url, httpMethod: .post,
+                                              parametersType: .httpBody)
         
         dataTask.response { response in
             switch response.result {

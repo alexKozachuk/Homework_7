@@ -1,5 +1,5 @@
 //
-//  File.swift
+//  HTTPHeader.swift
 //  
 //
 //  Created by Sasha on 05/03/2021.

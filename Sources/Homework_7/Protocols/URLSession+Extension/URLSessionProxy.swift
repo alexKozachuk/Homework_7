@@ -1,5 +1,5 @@
 //
-//  URLSessionProtocol.swift
+//  URLSessionProxy.swift
 //  
 //
 //  Created by Sasha on 05/03/2021.
@@ -7,8 +7,6 @@
 
 import Foundation
 
-
-// TODO: URLSessionProxy
 public protocol URLSessionProxy {
     typealias DataTaskResult = (Data?, URLResponse?, Error?) -> Void
     

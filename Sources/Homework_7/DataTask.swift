@@ -81,7 +81,8 @@ private extension DataTask {
                 return .failure(.sendBodyWithoutParam)
             }
             
-            guard let jsonData = try? JSONSerialization.data(withJSONObject: param, options: .prettyPrinted) else {
+            guard let jsonData = try? JSONSerialization.data(withJSONObject: param,
+                                                             options: .prettyPrinted) else {
                 return .failure(.jsonEncodeError)
             }
             
@@ -104,7 +105,7 @@ private extension DataTask {
 public extension DataTask {
     
     func response(queue: DispatchQueue = .main,
-                         completion: @escaping (DataResponse<Data>) -> Void) {
+                  completion: @escaping (DataResponse<Data>) -> Void) {
         
         let result = setupRequest()
             
