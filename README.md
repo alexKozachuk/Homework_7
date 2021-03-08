@@ -6,7 +6,7 @@ To make a request you need to create instance of NetworkLibrary, and create data
 
 Example of simple request
 
-```
+```swift
 let url = "https://mockurl"
 let dataTask = networkLibrary.request(url: url)
 
@@ -21,7 +21,7 @@ dataTask.response { response in
 
 Example of post request
 
-```
+```swift
 let url = "https://mockurl"
 let param: [String: Any] = ["mockTypeString": "mockValue",
                             "mockTypeInt": 1,
@@ -43,7 +43,7 @@ dataTask.response { response in
 
 Example of decodable request
 
-```
+```swift
 
 let url = "https://mockurl"
 let dataTask = networkLibrary.request(url: url)
@@ -62,7 +62,7 @@ dataTask.responseDecodable(of: SomeDecodable.self) { response in
 
 Example of validation request
 
-```
+```swift
 let url = "https://mockurl"
 
 networkLibrary.request(url: url)
